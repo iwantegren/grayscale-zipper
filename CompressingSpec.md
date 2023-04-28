@@ -1,0 +1,6 @@
+| Bits      | Field                | Description                                                                                                                                       |
+| --------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0-16      | Image width          |                                                                                                                                                   |
+| 17-32     | Image height         |                                                                                                                                                   |
+| 33-N      | Empty lines array    | N=Image height value. Each bit means emptyness of n-th line.<br> 1-line is empty, 0-otherwise                                                     |
+| (N+1)-... | Pixel representation | 0 - four white (0xFF) pixels in a row<br>10 - four black (0x00) pixels in a row<br>11 (xxxx xxxx)*4 - four different pixels with specified colors |
