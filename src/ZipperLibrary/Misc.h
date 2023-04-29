@@ -10,5 +10,6 @@ struct RawImageData
 };
 
 using Byte = unsigned char;
+using Word = unsigned short;
 
 constexpr std::size_t BYTE_SIZE = 8;

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "ZipperLibrary/Encoder.h"
+#include "ZipperLibrary/Decoder.h"
 #include "ZipperLibrary/ImageHandler.h"
 
 int main(int argc, char *argv[])
@@ -11,10 +12,10 @@ int main(int argc, char *argv[])
     std::cout << "Welcome to grayscale-zipper" << std::endl;
 
     RawImageData dummy_data;
-    dummy_data.width = 4;
-    dummy_data.height = 4;
+    dummy_data.width = 3;
+    dummy_data.height = 6;
 
-    unsigned char arr[16] = {
+    unsigned char arr[18] = {
         0xff,
         0xff,
         0xff,
@@ -27,9 +28,12 @@ int main(int argc, char *argv[])
         0x00,
         0x00,
         0x00,
-        0x00,
+        0x01,
+        0x01,
         0xff,
         0xff,
+        0xff,
+
         0xff,
         0xff,
     };
@@ -49,9 +53,9 @@ int main(int argc, char *argv[])
         std::cout << std::endl;
     }
 
-    // Test compress
+    // Test encode
     std::vector<Byte> buffer;
-    Encoder::compress(dummy_data, buffer);
+    Encoder::encode(dummy_data, buffer);
     for (auto i = 0; i < buffer.size(); ++i)
     {
         if (i > 0 && i % 4 == 0)
@@ -62,9 +66,42 @@ int main(int argc, char *argv[])
     }
     std::cout << std::endl;
 
-    std::ofstream fs("example.barch", std::ios::out | std::ios::binary | std::ios::app);
+    std::ofstream fs("example.barch", std::ios::out | std::ios::binary);
     fs.write(reinterpret_cast<const char *>(buffer.data()), buffer.size() * sizeof(buffer.back()));
     fs.close();
+
+    std::ifstream infile("example.barch");
+
+    infile.seekg(0, std::ios::end);
+    size_t length = infile.tellg();
+    infile.seekg(0, std::ios::beg);
+
+    std::vector<Byte> raw_bytes;
+    for (int i = 0; i < length; ++i)
+    {
+        char byte;
+        infile.read(&byte, sizeof(byte));
+        raw_bytes.push_back(byte);
+    }
+
+    Decoder::Bitstream decoder_stream(raw_bytes);
+    for (auto i = 0; i < raw_bytes.size(); ++i)
+    {
+        if (i > 0 && i % 4 == 0)
+            std::cout << std::endl;
+
+        std::bitset<BYTE_SIZE> byte(decoder_stream.popByte());
+        std::cout << byte << " ";
+    }
+    std::cout << std::endl;
+
+    auto decoded_image = Decoder::decode(raw_bytes);
+    for (auto i = 0; i < decoded_image.height; ++i)
+    {
+        for (auto j = 0; j < decoded_image.width; ++j)
+            std::cout << static_cast<int>(handler.get(i, j)) << ", ";
+        std::cout << std::endl;
+    }
 
     return 0;
 }

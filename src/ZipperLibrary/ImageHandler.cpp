@@ -28,6 +28,14 @@ bool ImageHandler::checkSequence(int row, int col, unsigned int length, Byte col
     return result == last;
 }
 
+void ImageHandler::fillSequence(int row, int col, unsigned int length, Byte color)
+{
+    const auto first = &raw_image.data[row * raw_image.width + col];
+    const auto last = &raw_image.data[row * raw_image.width + col + length];
+
+    std::fill(first, last, color);
+}
+
 bool ImageHandler::isEmptyRow(int row) const
 {
     return checkSequence(row, 0, raw_image.width, WHITE);

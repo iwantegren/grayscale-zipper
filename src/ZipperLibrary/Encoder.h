@@ -6,7 +6,7 @@
 
 namespace Encoder
 {
-    void compress(RawImageData &raw_data, std::vector<Byte> &out_buffer);
+    void encode(RawImageData &raw_data, std::vector<Byte> &out_buffer);
 
     class Bitstream
     {
@@ -15,10 +15,12 @@ namespace Encoder
 
         void push(bool bit);
         void push(Byte byte);
-        void push(unsigned short data);
+        void push(Word data);
         void popBytes(std::vector<Byte> &bytes);
 
     private:
         std::vector<bool> raw_bits;
     };
+
+    constexpr int BLOCK_SIZE = 4;
 }

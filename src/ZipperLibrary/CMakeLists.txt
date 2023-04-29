@@ -3,6 +3,8 @@ set(LIB_NAME "ZipperLibrary")
 add_library(${LIB_NAME}
     "${CMAKE_CURRENT_SOURCE_DIR}/Encoder.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/Encoder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Decoder.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Decoder.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/ImageHandler.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/ImageHandler.cpp"
 )

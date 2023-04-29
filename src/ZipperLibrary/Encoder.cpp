@@ -4,23 +4,21 @@
 
 namespace Encoder
 {
-    constexpr int BLOCK_SIZE = 4;
-
-    void compress(RawImageData &raw_data, std::vector<Byte> &out_buffer)
+    void encode(RawImageData &raw_data, std::vector<Byte> &out_buffer)
     {
         ImageHandler image(raw_data);
-        const int heigth = raw_data.height;
+        const int height = raw_data.height;
         const int width = raw_data.width;
 
         Bitstream bitstream;
 
-        // Add width & heigth
-        bitstream.push(static_cast<unsigned short>(width));
-        bitstream.push(static_cast<unsigned short>(heigth));
+        // Add width & height
+        bitstream.push(static_cast<Word>(width));
+        bitstream.push(static_cast<Word>(height));
 
         // Create and add array of empty indices
-        std::vector<bool> empty_rows(heigth);
-        for (auto row = 0; row < heigth; ++row)
+        std::vector<bool> empty_rows(height);
+        for (auto row = 0; row < height; ++row)
         {
             bool is_empty = image.isEmptyRow(row);
 
@@ -29,7 +27,7 @@ namespace Encoder
         }
 
         // Add non-empty rows
-        for (auto row = 0; row < heigth; ++row)
+        for (auto row = 0; row < height; ++row)
         {
             // Skip empty row
             if (empty_rows[row] == true)
@@ -94,7 +92,7 @@ namespace Encoder
 
     void Bitstream::push(Byte byte)
     {
-        Byte mask = Byte(1000'0000);
+        Byte mask = Byte(1 << 7);
         for (auto i = 0; i < BYTE_SIZE; ++i)
         {
             raw_bits.push_back(mask & byte);
@@ -102,9 +100,9 @@ namespace Encoder
         }
     }
 
-    void Bitstream::push(unsigned short data)
+    void Bitstream::push(Word data)
     {
-        unsigned short mask = 1000'0000'0000'0000;
+        Word mask = 1 << 15;
         for (auto i = 0; i < BYTE_SIZE * sizeof(data); ++i)
         {
             raw_bits.push_back(mask & data);

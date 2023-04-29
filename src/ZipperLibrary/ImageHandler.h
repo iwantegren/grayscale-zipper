@@ -11,11 +11,12 @@ public:
     void set(int row, int col, Byte val);
 
     bool checkSequence(int row, int col, unsigned int length, Byte color) const;
+    void fillSequence(int row, int col, unsigned int length, Byte color);
 
     bool isEmptyRow(int row) const;
 
     int width() const { return raw_image.width; };
-    int heigth() const { return raw_image.height; };
+    int height() const { return raw_image.height; };
 
     static const Byte WHITE = 0xFF;
     static const Byte BLACK = 0x00;
