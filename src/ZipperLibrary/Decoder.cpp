@@ -1,8 +1,8 @@
-#include "Decoder.h"
+#include "include/Decoder.h"
 
 #include <algorithm>
-#include "ImageHandler.h"
-#include "Encoder.h"
+#include "include/ImageHandler.h"
+#include "include/Encoder.h"
 
 namespace Decoder
 {

@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.16.3)
 
 project(grayscale-zipper)
 
-# main
-add_executable(${PROJECT_NAME} src/main.cpp)
+find_library(LIBZIPPER libgrayscalezipper /out/lib/libgrayscalezipper)
 
-# add ZipperLibrary
-add_subdirectory(src/ZipperLibrary)
-target_link_libraries(${PROJECT_NAME} PRIVATE ZipperLibrary)
+include_directories(src/ZipperLibrary/include)
+
+add_executable(${PROJECT_NAME} /src/main.cpp)
+target_link_libraries(${PROJECT_NAME} ${LIBZIPPER})

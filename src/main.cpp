@@ -3,9 +3,9 @@
 #include <bitset>
 #include <vector>
 
-#include "ZipperLibrary/Encoder.h"
-#include "ZipperLibrary/Decoder.h"
-#include "ZipperLibrary/ImageHandler.h"
+#include "ZipperLibrary/include/Encoder.h"
+#include "ZipperLibrary/include/Decoder.h"
+#include "ZipperLibrary/include/ImageHandler.h"
 
 int main(int argc, char *argv[])
 {

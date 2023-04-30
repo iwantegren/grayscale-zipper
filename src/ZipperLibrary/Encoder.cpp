@@ -1,6 +1,6 @@
-#include "Encoder.h"
+#include "include/Encoder.h"
 
-#include "ImageHandler.h"
+#include "include/ImageHandler.h"
 
 namespace Encoder
 {
