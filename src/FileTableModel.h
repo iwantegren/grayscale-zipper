@@ -4,14 +4,7 @@
 #include <QAbstractTableModel>
 #include <QString>
 #include <vector>
-
-struct FileInfo
-{
-    QString name;
-    float size;
-
-    static const int PROPERTIES_COUNT = 2;
-};
+#include <QFileInfo>
 
 class FileTableModel : public QAbstractTableModel
 {
@@ -25,9 +18,15 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-public slots:
     void initialize(const QString &directory);
 
+public slots:
+    void onRowClicked(int row);
+
+signals:
+    void wrongFile();
+    void resultReady();
+
 private:
-    std::vector<FileInfo> files;
+    std::vector<QFileInfo> files;
 };

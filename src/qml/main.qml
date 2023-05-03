@@ -1,8 +1,9 @@
 import QtQuick 2.12
 
 Rectangle {
-    width: 800
-    height: 600
+    width: 600
+    height: 300
+
     color: "lightgray"
 
     TableView {
@@ -16,9 +17,17 @@ Rectangle {
 
         delegate: Rectangle {
             implicitWidth: 300
-            implicitHeight: 30
+            implicitHeight: 36
             Text {
                 text: display
+                font.pointSize: 20
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    filetablemodel.onRowClicked(model.row)
+                }
             }
         }
     }

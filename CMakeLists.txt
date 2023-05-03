@@ -15,6 +15,8 @@ set(PROJECT_SOURCES
         src/main.cpp
         src/FileTableModel.h
         src/FileTableModel.cpp
+        src/ZipperWrapper.h
+        src/ZipperWrapper.cpp
         src/qml/qml.qrc
 )
 
