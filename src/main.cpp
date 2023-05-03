@@ -15,9 +15,11 @@ int main(int argc, char *argv[])
     std::cout << directory.toStdString() << std::endl;
 
     FileTableModel model;
+    model.initialize(directory);
 
     QQuickView *view = new QQuickView;
     view->rootContext()->setContextProperty("directory", directory);
+    view->rootContext()->setContextProperty("filetablemodel", &model);
     view->setSource(QUrl("qrc:/main.qml"));
     view->show();
 

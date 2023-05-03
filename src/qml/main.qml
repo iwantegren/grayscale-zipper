@@ -1,28 +1,22 @@
 import QtQuick 2.12
-import FileTableModel 1.0
 
 Rectangle {
-    width: 400
-    height: 400
+    width: 800
+    height: 600
     color: "lightgray"
 
-    Text {
-        text: directory
-        font.family: "Helvetica"
-        font.pointSize: 24
-    }
-
     TableView {
+        id: tableview
         anchors.fill: parent
         columnSpacing: 1
         rowSpacing: 1
         clip: true
 
-        model: FileTableModel {}
+        model: filetablemodel
 
         delegate: Rectangle {
-            implicitWidth: 100
-            implicitHeight: 50
+            implicitWidth: 300
+            implicitHeight: 30
             Text {
                 text: display
             }

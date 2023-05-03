@@ -1,41 +1,33 @@
+#pragma once
+
 #include <qqml.h>
 #include <QAbstractTableModel>
+#include <QString>
+#include <vector>
+
+struct FileInfo
+{
+    QString name;
+    float size;
+
+    static const int PROPERTIES_COUNT = 2;
+};
 
 class FileTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    FileTableModel()
-    {
-        qmlRegisterType<FileTableModel>("FileTableModel", 1, 0, "FileTableModel");
-    }
+    FileTableModel();
 
-    int rowCount(const QModelIndex & = QModelIndex()) const override
-    {
-        return 200;
-    }
+    int rowCount(const QModelIndex & = QModelIndex()) const override;
+    int columnCount(const QModelIndex & = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
-    int columnCount(const QModelIndex & = QModelIndex()) const override
-    {
-        return 200;
-    }
+public slots:
+    void initialize(const QString &directory);
 
-    QVariant data(const QModelIndex &index, int role) const override
-    {
-        switch (role)
-        {
-        case Qt::DisplayRole:
-            return QString("%1, %2").arg(index.column()).arg(index.row());
-        default:
-            break;
-        }
-
-        return QVariant();
-    }
-
-    QHash<int, QByteArray> roleNames() const override
-    {
-        return {{Qt::DisplayRole, "display"}};
-    }
+private:
+    std::vector<FileInfo> files;
 };
