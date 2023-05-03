@@ -1,12 +1,25 @@
 #include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#include <QQuickView>
+#include <QQmlContext>
+#include <iostream>
+#include "FileTableModel.h"
+
+using std::cout;
+using std::endl;
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    auto directory = QCoreApplication::arguments().size() > 1 ? QCoreApplication::arguments().at(1) : QString("");
+    std::cout << directory.toStdString() << std::endl;
+
+    FileTableModel model;
+
+    QQuickView *view = new QQuickView;
+    view->rootContext()->setContextProperty("directory", directory);
+    view->setSource(QUrl("qrc:/main.qml"));
+    view->show();
 
     return app.exec();
 }

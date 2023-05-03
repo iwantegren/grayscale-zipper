@@ -13,6 +13,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 
 set(PROJECT_SOURCES
         src/main.cpp
+        src/FileTableModel.h
+        src/FileTableModel.cpp
         src/qml/qml.qrc
 )
 

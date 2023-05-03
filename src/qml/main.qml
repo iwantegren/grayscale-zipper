@@ -1,65 +1,31 @@
 import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.12
-import QtQml.Models 2.12
+import FileTableModel 1.0
 
-ApplicationWindow {
-    id: application
+Rectangle {
+    width: 400
+    height: 400
+    color: "lightgray"
 
-    width: 720
-    height: 480
+    Text {
+        text: directory
+        font.family: "Helvetica"
+        font.pointSize: 24
+    }
 
-    title: "Client App"
-    visible: true
+    TableView {
+        anchors.fill: parent
+        columnSpacing: 1
+        rowSpacing: 1
+        clip: true
 
-    Dialog {
-        id: errorDialog
-        title: "Error..."
-        modal: true
+        model: FileTableModel {}
 
-        Text {
-            id: errorText
-            text: "Initial text"
-            anchors.centerIn: parent
-        }
-
-        standardButtons: Dialog.Ok
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-
-        onAccepted: {
-            console.log("And of course you could only agree.")
-            Qt.quit()
-        }
-
-        function error(t)
-        {
-            errorText.text = t;
-            visible = true;
-        }
-
-        Component.onCompleted: {
+        delegate: Rectangle {
+            implicitWidth: 100
+            implicitHeight: 50
+            Text {
+                text: display
+            }
         }
     }
 }
-
-// Rectangle {
-//     width: 400
-//     height: 400
-//     color: "lightgray"
-
-//     FileDialog {
-//         id: fileDialog
-//         title: "Open File"
-//         visible: false
-
-//         onAccepted: {
-//             console.log("Selected file: " + fileDialog.fileUrl.toString());
-//         }
-//     }
-
-//     MouseArea {
-//         anchors.fill: parent
-//         onClicked: fileDialog.visible = true
-//     }
-// }
