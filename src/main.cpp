@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
     auto directory = QCoreApplication::arguments().size() > 1 ? QCoreApplication::arguments().at(1) : QString("");
     std::cout << directory.toStdString() << std::endl;
 
-    FileTableModel model;
-    model.initialize(directory);
+    FileTableModel model(directory);
+    model.lookup();
 
     QQuickView *view = new QQuickView;
     view->rootContext()->setContextProperty("directory", directory);

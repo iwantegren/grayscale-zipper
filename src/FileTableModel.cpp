@@ -3,20 +3,35 @@
 #include <QDir>
 #include <QStringList>
 #include "ZipperWrapper.h"
+#include <algorithm>
 
 namespace
 {
     enum Columns : int
     {
-        NAME,
-        SIZE,
-        STATUS
+        NAME = 0,
+        SIZE = 1,
+        STATUS = 2
     };
 
-    static const int PROPERTIES_COUNT = 2;
+    static const int PROPERTIES_COUNT = 3;
+
+    QString statusToStr(Status s)
+    {
+        switch (s)
+        {
+        case Status::ENCODING:
+            return QString("Encoding...");
+        case Status::DECODING:
+            return QString("Decoding...");
+        default:
+            return QString("");
+        }
+    }
 }
 
-FileTableModel::FileTableModel()
+FileTableModel::FileTableModel(const QString &directory)
+    : directory(directory)
 {
 }
 
@@ -38,9 +53,11 @@ QVariant FileTableModel::data(const QModelIndex &index, int role) const
         switch (index.column())
         {
         case NAME:
-            return files[index.row()].fileName();
+            return files[index.row()].info.fileName();
         case SIZE:
-            return QString("%1 b").arg(files[index.row()].size());
+            return QString("%1 b").arg(files[index.row()].info.size());
+        case STATUS:
+            return statusToStr(files[index.row()].status);
         default:
             break;
         }
@@ -56,7 +73,7 @@ QHash<int, QByteArray> FileTableModel::roleNames() const
     return {{Qt::DisplayRole, "display"}};
 }
 
-void FileTableModel::initialize(const QString &directory)
+void FileTableModel::lookup()
 {
     QDir dir(directory);
     QFileInfoList files_in_dir = dir.entryInfoList(QStringList() << "*.bmp"
@@ -65,17 +82,62 @@ void FileTableModel::initialize(const QString &directory)
                                                    QDir::Files);
     for (const QFileInfo &file : files_in_dir)
     {
-        std::cout << "[" << file.fileName().toStdString() << " | " << file.size() << " b]\n";
-        files.push_back(file);
+        auto it = std::find_if(files.cbegin(), files.cend(), [file](const FileStatus &f)
+                               { return file.fileName() == f.info.fileName(); });
+        if (it == files.cend())
+        {
+            std::cout << "[" << file.fileName().toStdString() << " | " << file.size() << " b]\n";
+            files.push_back({file, Status::NONE});
+        }
     }
 
-    std::cout << "Initialized " << files.size() << " rows from directory '" << directory.toStdString() << "'\n";
+    emit layoutChanged();
 }
 
 void FileTableModel::onRowClicked(int row)
 {
-    ZipperWrapper *zipper = new ZipperWrapper(files[row]);
-    connect(zipper, &ZipperWrapper::wrongFile, this, &FileTableModel::wrongFile);
-    connect(zipper, &ZipperWrapper::resultReady, this, &FileTableModel::resultReady);
+    if (files[row].status != Status::NONE)
+    {
+        std::cout << "File '" << files[row].info.fileName().toStdString() << "' is still processing, please wait\n";
+        return;
+    }
+
+    auto extension = files[row].info.suffix();
+    Status action;
+    if (extension == "bmp")
+        action = Status::ENCODING;
+    else if (extension == "barch")
+        action = Status::DECODING;
+    else
+    {
+        std::cout << "Wrong file to process '" << files[row].info.fileName().toStdString() << "'\n";
+        emit wrongFile(QString("Wrong file '%1'").arg(files[row].info.fileName()));
+        return;
+    }
+
+    files[row].status = action;
+
+    emit dataChanged(index(row, STATUS), index(row, STATUS));
+
+    auto *zipper = new ZipperWrapper(files[row].info, action);
+    connect(zipper, &ZipperWrapper::resultReady, this, &FileTableModel::onResultReady);
     zipper->start();
+}
+
+void FileTableModel::onResultReady(const QString &filename)
+{
+    auto it = std::find_if(files.begin(), files.end(), [filename](const FileStatus &f)
+                           { return f.info.fileName() == filename; });
+
+    if (it != files.end())
+    {
+        int row = it - files.begin();
+        std::cout << "File [" << filename.toStdString() << "] is ready!\n";
+        files[row].status = Status::NONE;
+        emit dataChanged(index(row, STATUS), index(row, STATUS));
+
+        resultReady(row);
+    }
+
+    lookup();
 }
