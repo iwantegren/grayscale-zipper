@@ -12,9 +12,10 @@ class ZipperWrapper : public QThread
 public:
     ZipperWrapper(const QFileInfo &file_info, Status action);
 
+    static QString getResultFileName(const QString &filename, Status action);
+
 signals:
-    void wrongFile();
-    void resultReady(const QString &filename);
+    void resultReady(const QString &filename, const QString error);
 
 protected:
     void run() override;
@@ -23,5 +24,5 @@ protected:
 
 private:
     const QFileInfo &file;
-    Status action;
+    const Status action;
 };

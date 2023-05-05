@@ -33,6 +33,7 @@ namespace
 FileTableModel::FileTableModel(const QString &directory)
     : directory(directory)
 {
+    lookup();
 }
 
 int FileTableModel::rowCount(const QModelIndex &) const
@@ -82,12 +83,16 @@ void FileTableModel::lookup()
                                                    QDir::Files);
     for (const QFileInfo &file : files_in_dir)
     {
-        auto it = std::find_if(files.cbegin(), files.cend(), [file](const FileStatus &f)
-                               { return file.fileName() == f.info.fileName(); });
-        if (it == files.cend())
+        int row = findRow(file.fileName());
+        if (row == -1)
         {
-            std::cout << "[" << file.fileName().toStdString() << " | " << file.size() << " b]\n";
+            // New file
             files.push_back({file, Status::NONE});
+        }
+        else if (files[row].status == Status::NONE)
+        {
+            // Old file that is not processing now
+            files[row].info = file;
         }
     }
 
@@ -96,9 +101,12 @@ void FileTableModel::lookup()
 
 void FileTableModel::onRowClicked(int row)
 {
+    auto filename = files[row].info.fileName();
+
+    // Check if clicked file free
     if (files[row].status != Status::NONE)
     {
-        std::cout << "File '" << files[row].info.fileName().toStdString() << "' is still processing, please wait\n";
+        emit errorOccured(QString("File '%1' is still processing, please wait").arg(filename));
         return;
     }
 
@@ -110,8 +118,16 @@ void FileTableModel::onRowClicked(int row)
         action = Status::DECODING;
     else
     {
-        std::cout << "Wrong file to process '" << files[row].info.fileName().toStdString() << "'\n";
-        emit wrongFile(QString("Wrong file '%1'").arg(files[row].info.fileName()));
+        std::cout << "Wrong file to process '" << filename.toStdString() << "'\n";
+        emit errorOccured(QString("Wrong file '%1'").arg(filename));
+        return;
+    }
+
+    // Check if result file after processing is free
+    int result_file_row = findRow(ZipperWrapper::getResultFileName(filename, action));
+    if (result_file_row != -1 && files[result_file_row].status != Status::NONE)
+    {
+        emit errorOccured(QString("File '%1' is processing, please wait").arg(files[result_file_row].info.fileName()));
         return;
     }
 
@@ -124,20 +140,30 @@ void FileTableModel::onRowClicked(int row)
     zipper->start();
 }
 
-void FileTableModel::onResultReady(const QString &filename)
+void FileTableModel::onResultReady(const QString &filename, const QString error)
+{
+    int row = findRow(filename);
+    if (row != -1)
+    {
+        files[row].status = Status::NONE;
+        emit dataChanged(index(row, STATUS), index(row, STATUS));
+
+        if (!error.isEmpty())
+        {
+            emit errorOccured(QString("Error during processing '%1':\n%2").arg(files[row].info.fileName()).arg(error));
+        }
+    }
+
+    lookup();
+}
+
+int FileTableModel::findRow(const QString &filename)
 {
     auto it = std::find_if(files.begin(), files.end(), [filename](const FileStatus &f)
                            { return f.info.fileName() == filename; });
 
     if (it != files.end())
-    {
-        int row = it - files.begin();
-        std::cout << "File [" << filename.toStdString() << "] is ready!\n";
-        files[row].status = Status::NONE;
-        emit dataChanged(index(row, STATUS), index(row, STATUS));
-
-        resultReady(row);
-    }
-
-    lookup();
+        return it - files.begin();
+    else
+        return -1;
 }

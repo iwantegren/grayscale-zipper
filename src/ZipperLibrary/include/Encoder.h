@@ -1,12 +1,16 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "Misc.h"
 
 namespace Encoder
 {
     void encode(RawImageData &raw_data, std::vector<Byte> &out_buffer);
+
+    RawImageData readDecoded(const std::string &filename);
+    void writeEncoded(const std::string &filename, std::vector<Byte> &data);
 
     class Bitstream
     {

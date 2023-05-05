@@ -13,6 +13,7 @@ set(HEADERS
     include/Encoder.h
     include/ImageHandler.h
     include/Misc.h
+    include/ZipperException.h
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
@@ -26,5 +27,3 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "/usr/lib")
-
-# install(FILES ${HEADERS} DESTINATION include)

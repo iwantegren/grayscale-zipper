@@ -35,13 +35,14 @@ public:
 
 public slots:
     void onRowClicked(int row);
-    void onResultReady(const QString &filename);
+    void onResultReady(const QString &filename, const QString error);
 
 signals:
-    void wrongFile(const QString &message);
-    void resultReady(int row);
+    void errorOccured(const QString &message);
 
 private:
+    int findRow(const QString &filename);
+
     std::vector<FileStatus> files;
     const QString &directory;
 };

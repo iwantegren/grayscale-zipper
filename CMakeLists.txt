@@ -22,8 +22,14 @@ set(PROJECT_SOURCES
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
+include_directories(src/ZipperLibrary/include)
+link_directories(out/lib)
+
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick)
+  PRIVATE 
+  Qt${QT_VERSION_MAJOR}::Core 
+  Qt${QT_VERSION_MAJOR}::Quick
+  grayscalezipper)
 
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .

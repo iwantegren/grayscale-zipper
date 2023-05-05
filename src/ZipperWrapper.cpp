@@ -3,10 +3,32 @@
 #include <iostream>
 #include <QFile>
 #include <QIODevice>
+#include "ZipperLibrary/include/Encoder.h"
+#include "ZipperLibrary/include/Decoder.h"
+#include "ZipperLibrary/include/Misc.h"
+#include "ZipperLibrary/include/ZipperException.h"
+#include <vector>
+#include <bitset>
 
 ZipperWrapper::ZipperWrapper(const QFileInfo &file_info, Status action)
     : file(file_info), action(action)
 {
+}
+
+QString ZipperWrapper::getResultFileName(const QString &filename, Status action)
+{
+    const QString suffix_encoded = ".packed.barch";
+    const QString suffix_decoded = ".unpacked.bmp";
+
+    switch (action)
+    {
+    case Status::ENCODING:
+        return filename + suffix_encoded;
+    case Status::DECODING:
+        return filename + suffix_decoded;
+    default:
+        return filename;
+    }
 }
 
 void ZipperWrapper::run()
@@ -28,66 +50,46 @@ void ZipperWrapper::encode()
 {
     std::cout << "Start encoding of '" << file.fileName().toStdString() << "' file...\n";
 
-    for (int i = 0; i < 5; ++i)
+    sleep(1);
+
+    QString error; // By default error message is empty
+    try
     {
-        std::cout << "Encoding... " << i << std::endl;
-        sleep(1);
+        auto raw_image_data = Encoder::readDecoded(file.filePath().toStdString());
+
+        std::vector<Byte> buffer;
+        Encoder::encode(raw_image_data, buffer);
+
+        Encoder::writeEncoded(getResultFileName(file.filePath(), action).toStdString(), buffer);
+    }
+    catch (ZipperException e)
+    {
+        error = e.what();
     }
 
-    QString suffix_encoded = ".packed.barch";
-
-    QFile sourceFile(file.filePath());
-    QFile destinationFile(file.filePath() + suffix_encoded);
-
-    sourceFile.open(QIODevice::ReadOnly);
-    destinationFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-
-    QByteArray buffer;
-    qint64 bytesRead = 0;
-
-    do
-    {
-        buffer = sourceFile.read(4096);
-        bytesRead = buffer.size();
-        destinationFile.write(buffer);
-    } while (bytesRead > 0);
-
-    sourceFile.close();
-    destinationFile.close();
-
-    emit resultReady(file.fileName());
+    emit resultReady(file.fileName(), error);
 }
 
 void ZipperWrapper::decode()
 {
     std::cout << "Start decoding of '" << file.fileName().toStdString() << "' file...\n";
 
-    for (int i = 0; i < 5; ++i)
+    sleep(1);
+
+    QString error; // By default error message is empty
+    try
     {
-        std::cout << "Decoding... " << i << std::endl;
-        sleep(1);
+        std::vector<Byte> buffer;
+        Decoder::readEncoded(file.filePath().toStdString(), buffer);
+
+        auto raw_image_data = Decoder::decode(buffer);
+
+        Decoder::writeDecoded(getResultFileName(file.filePath(), action).toStdString(), raw_image_data);
+    }
+    catch (ZipperException e)
+    {
+        error = e.what();
     }
 
-    QString suffix_decoded = ".unpacked.bmp";
-
-    QFile sourceFile(file.filePath());
-    QFile destinationFile(file.filePath() + suffix_decoded);
-
-    sourceFile.open(QIODevice::ReadOnly);
-    destinationFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-
-    QByteArray buffer;
-    qint64 bytesRead = 0;
-
-    do
-    {
-        buffer = sourceFile.read(4096);
-        bytesRead = buffer.size();
-        destinationFile.write(buffer);
-    } while (bytesRead > 0);
-
-    sourceFile.close();
-    destinationFile.close();
-
-    emit resultReady(file.fileName());
+    emit resultReady(file.fileName(), error);
 }

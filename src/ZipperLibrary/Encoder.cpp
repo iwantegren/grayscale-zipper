@@ -1,6 +1,8 @@
 #include "include/Encoder.h"
 
 #include "include/ImageHandler.h"
+#include <fstream>
+#include "include/ZipperException.h"
 
 namespace Encoder
 {
@@ -83,6 +85,54 @@ namespace Encoder
         }
 
         bitstream.popBytes(out_buffer);
+    }
+
+    RawImageData readDecoded(const std::string &filename)
+    {
+        RawImageData out_data;
+
+        std::ifstream infile(filename, std::ios::in | std::ios::binary);
+        if (!infile.is_open())
+            throw ZipperException("Can't open file for reading!");
+
+        infile.seekg(0, std::ios::end);
+        size_t file_size = infile.tellg();
+        infile.seekg(0, std::ios::beg);
+
+        if (file_size < sizeof(RawImageData))
+        {
+            throw ZipperException("File is empty!");
+        }
+
+        infile.read(reinterpret_cast<char *>(&out_data.width), sizeof(out_data.width));
+        infile.read(reinterpret_cast<char *>(&out_data.height), sizeof(out_data.height));
+        auto length = out_data.width * out_data.height;
+
+        if (file_size != length + sizeof(out_data.width) + sizeof(out_data.height))
+        {
+            throw ZipperException("Wrong file content!");
+        }
+
+        out_data.data = new unsigned char[length]();
+        infile.read(reinterpret_cast<char *>(out_data.data), sizeof(Byte) * length);
+        infile.close();
+
+        return out_data;
+    }
+
+    void writeEncoded(const std::string &filename, std::vector<Byte> &data)
+    {
+        std::ofstream outfile(filename, std::ios::out | std::ios::binary);
+        if (!outfile.is_open())
+            throw ZipperException("Can't open file for writing!");
+
+        if (data.empty())
+        {
+            throw ZipperException("No data for writing!");
+        }
+
+        outfile.write(reinterpret_cast<const char *>(data.data()), sizeof(Byte) * data.size());
+        outfile.close();
     }
 
     void Bitstream::push(bool bit)
