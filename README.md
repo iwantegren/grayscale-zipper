@@ -1,72 +1,44 @@
-## 0. Запуск
+# Grayscale zipper
+## Image Compression Library and UI
 
-Для простоти запуску проект містить bash script `run.sh` що збирає shared library, сам проект та запускає його з директорією `res/`
+This project consists of an image compression library and a user interface (UI) built using Qt Quick/QML. The library allows for encoding and decoding of grayscale images in specific data structure, while the UI provides a convenient way to interact with the library's functionality.
 
-## 1.  Бібліотека стискання зображень. 
+## Launch
 
-Необхідно створити бібліотеку (static або shared - на вибір) з функціональністю, описаною нижче. Можливе використання ТІЛЬКИ C++ і STL. Будь-які інші 3rdparty libraries заборонено.
+To launch the project, use the provided bash script `run.sh`. This script collects the shared library, the project itself, and runs it with the `res/` directory.
 
-Постановка задачі.
+> bash run.sh
 
-Є зображення у форматі grayscale (тобто, кожен піксель представлений значеннями від 0 до 255 відтінків сірого), яке містить сторінку тексту
+## Image Compression Library
 
+The image compression library is implemented in C++. It provides functions to encode and decode grayscale images according to the following specifications:
+
+- The input image is represented by the `RawImageData` structure:
 ```
-struct RawImageData {
-int width; // image width in pixels
-int height; // image height in pixels
-unsigned char * data; // Pointer to image data. data[j * width + i] is color of pixel in row j and column i.
+struct RawImageData
+{
+    int width; // image width in pixels
+    int height; // image height in pixels
+    unsigned char * data; // Pointer to image data. data[j * width + i] is color of pixel in row j and column i.
 }
 ```
+- Each pixel in the image is represented by values from 0 to 255 shades of gray.
+- The image may contain white rows and non-empty rows with white areas.
+- The library optimizes storage space by encoding the image as follows:
+  - For each row of pixels, the library stores whether it is empty or not.
+  - Each non-empty line is encoded as follows:
+    - 4 consecutive white pixels are represented by code 0b0.
+    - 4 consecutive black pixels are represented by code 0b10.
+    - Any other sequence of 4 pixels is encoded as 0b11 + pixel colors.
 
-Доступ до комірок для наглядності
+The library provides encoding and decoding functions to convert the `RawImageData` structure to the specified representation and restore the original image during decoding. The resulting encoded image is saved to a file with the `.barch` extension.
 
-|     |     |     |
-| --- | --- | --- |
-| 0   | 1   | 2   |
-| 3   | 4   | 5   |
-| 6   | 7   | 8   |
+## Image Compression UI
 
-Таке зображення містить багато білих рядків пікселів (наприклад, поля згори та знизу та міжрядкові інтервали), а також, навіть непусті рядки пікселів, містять багато білих зон. Для оптимізації місця зберігання такого зображення необхідно його закодувати так:
+The UI is built using Qt and QML. It allows for launching the program with a directory path parameter (defaulting to the current directory if not specified). The UI features include:
 
-  1. для кожного рядка пікселів зберігати порожній він чи ні в індексі порожніх/непустих рядків (порожній рядок - це рядок, що містить тільки білі пікселі 0xff)
-  2. кожний непустий рядок кодувати наступним чином (зліва направо):
-     - 4-ри поспіль білих пікселів кодувати 0
-     - 4-ри поспіль чорних пікселів кодувати 10
-     - будь-яку іншу послідовність 4х пікселів кодувати в 11 + кольори пікселів
-
-Наприклад, якщо ширина картинки 12, то наступний рядок буде вважатися порожнім:
-```
-0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
-```
-Тобто йому буде відповідати лише 1-ця в індексі порожніх/непустих рядків.
-
-А рядок пікселів:
-```
-0xff 0xff 0xff 0xff 0x00 0x00 0x00 0x00 0x01 0x01 0x01 0x01
-```
-Закодується в (у бінарному вигляді):
-```
-01011 0000 0001 0000 0001 0000 0001 0000 0001
-```
-де перший нуль відповідає 4м білим пікселям, наступні 10 відповідають чорним пікселям з 5 по 8й і залишок 11 ... - відповідають пікселям, що залишилися.
-
-- Необхідно написати функції кодування та декодування зі структури RawImageData до представлення, описаного у попередньому розділі.
-- При розкодуванні закодованого зображення має бути відновлено оригінальне зображення
-- результат зберегти у файл з розширенням .barch
-  
-
-##  2. UI стиснення зображень з використанням Qt та QML.
-  Дозволяється використовувати тільки C++, STL, Qt, Qt Quick (але заборонено використання Qt Quick Controls та Qt Quick Controls 2 та Qt Widgets)
-  - Можливість запустити програму з параметром "шлях до директорії" (якщо параметр не вказано або він є не коректним - використовувати поточну директорію, з якої запущено додаток)
-  - Бажано реалізувати QML плагін, в який покласти QML компоненти, які будуть використовуватися в додатку (модель, кнопка, діалог)
-  - Реалізувати C++ модель, яка міститиме в собі перелік файлів (з додатковими атрибутами, наприклад, розмір і т.д.) в поточній директорії (або директорії, заданої параметром командного рядка) з можливістю фільтрації по розширенню
-  - Використовуючи модель з попереднього пункту, відобразити список файлів у вікні програми (просто список файлів у стовпчик) з розмірами. Відображати тільки bmp, png і barch файли
-  - При натисканні на список:
-    Якщо це .bmp (.barch - закодований) файл, його потрібно закодувати (.barch - потрібно розкодувати), використовуючи бібліотеку з першої частини завдання. Кодувати (розкодувати) потрібно в окремому потоці, при цьому у списку біля імені файлу відображати "Кодується" ("Розкодовується") протягом усього процесу. Ім'я кодованого файлу = ім'я файлу + "packed.barch". Ім'я розкодованого файлу = ім'я файлу + "unpacked.bmp"
-     Інакше потрібно відобразити діалогове вікно з помилкою.
-  - Діалогове вікно з помилкою та однією кнопкою "Ок", при натисканні на яку це вікно має закритися. При натисканні кнопка має показати фідбек (наприклад, змінити колір). Таке діалогове вікно повинне завантажуватись не при старті додатку, а тільки тоді, коли його потрібно відобразити. Повідомлення про помилку може бути, наприклад, "Невідомий файл"
-
-##  3. Проект та збірка
-  - Використовувати cmake або qmake - на вибір
-  - Якщо для збирання програми потрібні додаткові параметри - бажано, щоби був скрипт який збере з потрібними параметрами
-  - Програму розмістити на github і надіслати посилання або в локальний репозиторій і надіслати архів
+- QML plugin: A plugin containing QML components used in the application, such as the model, button, and dialog.
+- C++ model: A model that holds a list of files in the current directory (or the directory specified via command line parameter), with additional attributes like size. The model provides filtering by file extension.
+- Displaying a list of files: The program window shows a columnar list of files with their sizes, using the model from the previous point. Only `.bmp`, `.png`, and `.barch` files are displayed.
+- Handling file selection: When a file is clicked in the list, the program checks its extension. If it's a `.bmp` or `.barch` file, it is encoded (or decoded) using the image compression library in a separate thread. The list displays "Encoded" or "Decoded" next to the file name during the process. Encoded files are saved with the filename `filename_packed.barch`, while unpacked files use `filename_unpacked.bmp`. If the file is of another type, an error dialog is displayed.
+- Error dialog: An error dialog with a single "Ok" button is shown in case of errors.
